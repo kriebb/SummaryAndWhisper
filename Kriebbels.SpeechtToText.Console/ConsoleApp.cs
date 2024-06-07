@@ -6,7 +6,7 @@ namespace Kriebbels.SpeechtToText.Console;
 public class ConsoleApp(
     IAudioRecordingService audioRecordingService, 
     IAudioProcessingService audioProcessingService, 
-    IAudioTranscriptionService audioTranscriptionService,
+    ITranscriptionService audioTranscriptionService,
     IFileService fileService,
     IServiceProvider serviceProvider,
     ILogger<ConsoleApp> logger)
@@ -34,7 +34,7 @@ public class ConsoleApp(
         await audioProcessingService.ProcessAudioAsync(_path.FullPath)
             .Bind(async processedAudio =>
             {
-                return await audioTranscriptionService.TranscribeAudioAsync(processedAudio.TrimmedFiles)
+                return await audioTranscriptionService.TranscribeAudioAsync(processedAudio.TrimmedFiles, _path.FullPath)
                     .Bind(async transcription =>
                     {
                         var fileResult = await fileService.WriteTranscriptsToFileAstnc(_path.FullPath,

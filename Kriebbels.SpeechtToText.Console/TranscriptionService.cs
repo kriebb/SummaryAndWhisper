@@ -2,16 +2,17 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Azure.AI.OpenAI;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Configuration;
 
 namespace Kriebbels.SpeechtToText.Console;
 
 public sealed record TranscriptionResult(string InitialTranscript, string PunctuatedTranscript, string FinalTranscript);
-public partial class TranscriptionService(OpenAIClient client, OpenAiClientProvider provider, IFileService fileService):ITranscriptionService
+public partial class TranscriptionService(OpenAiClientProvider provider, IFileService fileService, IConfiguration configuration):ITranscriptionService
 {
     private const string NonAsciiCharactersPattern = @"[^\u0000-\u007F]+";
 
 
-    public async Task<Result<TranscriptionResult,ValidationResult>> TranscribeAudio(IEnumerable<string> trimmedFiles, string fileName)
+    public async Task<Result<TranscriptionResult,ValidationResult>> TranscribeAudioAsync(IEnumerable<string> trimmedFiles, string fileName)
     {
         var initialTranscript = await GetInitialTranscript(trimmedFiles, fileName);
         if (initialTranscript.IsFailure)
@@ -26,6 +27,7 @@ public partial class TranscriptionService(OpenAIClient client, OpenAiClientProvi
     {
         var transcript = new StringBuilder();
 
+        var client = provider.Create(configuration);
         foreach(var trimmedFile in trimmedFiles)
         {
             var audioFile = await fileService.ReadAllBytesAsync(trimmedFile);
@@ -45,6 +47,7 @@ public partial class TranscriptionService(OpenAIClient client, OpenAiClientProvi
 
     private async Task<string> GetTranscript(string prompt, string transcript)
     {
+        var client = provider.Create(configuration);
         var response = await client.GetChatCompletionsAsync(new ChatCompletionsOptions
         {
             Messages =
@@ -75,7 +78,7 @@ public partial class TranscriptionService(OpenAIClient client, OpenAiClientProvi
 
 public interface ITranscriptionService
 {
-    Task<Result<TranscriptionResult, ValidationResult>> TranscribeAudio(IEnumerable<string> trimmedFiles,
+    Task<Result<TranscriptionResult, ValidationResult>> TranscribeAudioAsync(IEnumerable<string> trimmedFiles,
         string fileName);
 
 }

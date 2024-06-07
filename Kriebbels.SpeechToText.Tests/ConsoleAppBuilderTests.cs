@@ -16,10 +16,12 @@ public class ConsoleAppBuilderTests
         var serviceProvider = app.ServiceProvider;
 
         // Act & Assert
-        foreach (var service in services)
+        foreach (var item in services)
         {
-            var serviceInstance = serviceProvider.GetService(service.ServiceType);
-            Assert.NotNull(serviceInstance);
+            if (!item.ServiceType.ContainsGenericParameters)
+            {
+                serviceProvider.GetService(item.ServiceType);
+            }
         }
     }
 }

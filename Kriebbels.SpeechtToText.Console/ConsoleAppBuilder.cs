@@ -1,4 +1,5 @@
 using System.Collections;
+using Azure.AI.OpenAI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,8 +26,12 @@ public class ConsoleAppBuilder(string[] args)
 
         Services.AddSingleton<ITranscriptionService,TranscriptionService>();
         Services.AddSingleton<IAudioRecordingService,AudioRecordingService>();
+        Services.AddSingleton<ISilenceDetector, SilenceDetector>();
+        Services.AddSingleton<IAudioSegmenter, AudioSegmenter>();
+        Services.AddSingleton<IAudioFileTrimmer, AudioFileTrimmer>();
+        
         Services.AddSingleton<ConsoleApp>();
-
+            
         Services.AddLogging(builder =>
             {
                 builder.AddSystemdConsole();
@@ -36,6 +41,8 @@ public class ConsoleAppBuilder(string[] args)
             
         );
 
+        Services.AddOptions();
+        
         configureServices(Services);
         
     }

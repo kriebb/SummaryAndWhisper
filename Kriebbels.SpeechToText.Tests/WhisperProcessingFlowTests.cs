@@ -11,19 +11,18 @@ public class WhisperProcessingFlowTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
 
-    private readonly OpenAIClient _client;
     private readonly OpenAiClientProvider _provider;
+    private ConfigurationManager _configuration;
 
     public WhisperProcessingFlowTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
 
         _provider = new OpenAiClientProvider();
-        var configuration = new ConfigurationManager();
-        configuration.AddJsonFile("appsettings.tests.json", false);
-        configuration.AddUserSecrets<Program>(false,true);
+        _configuration = new ConfigurationManager();
+        _configuration.AddJsonFile("appsettings.tests.json", false);
+        _configuration.AddUserSecrets<Program>(false,true);
         
-        _client = _provider.Create(configuration);
     }
     //https://github.com/Azure-Samples/openai/blob/main/Basic_Samples/Whisper/dotnet/csharp/Whisper_prompting_guide.ipynb
     [Fact]
@@ -35,7 +34,7 @@ public class WhisperProcessingFlowTests
         IAudioSegmenter audioSegmenter = new AudioSegmenter();
         IAudioFileTrimmer audioTrimmer = new AudioFileTrimmer();
         var audioProcessingService = new AudioProcessingService(_provider,silenceDetector, audioSegmenter,audioTrimmer);
-        var transcriptionService = new TranscriptionService(_client, _provider, fileService);
+        var transcriptionService = new TranscriptionService(_provider, fileService,_configuration);
 
         var path = await UseEarningsCallWavFile(false);
 
@@ -43,7 +42,7 @@ public class WhisperProcessingFlowTests
         var processAudioResult = audioProcessingService.ProcessAudioAsync(path.fullFilePath);
         if (processAudioResult.IsFailure)
             Assert.Fail(processAudioResult.Error.Message);
-        var transcriptionResult = await transcriptionService.TranscribeAudio(processAudioResult.Value.TrimmedFiles, path.fileName);
+        var transcriptionResult = await transcriptionService.TranscribeAudioAsync(processAudioResult.Value.TrimmedFiles, path.fileName);
 
         // Assert
         Assert.NotNull(transcriptionResult.Value.InitialTranscript);

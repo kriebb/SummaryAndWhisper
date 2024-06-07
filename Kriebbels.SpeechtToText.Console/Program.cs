@@ -10,6 +10,7 @@ public partial class Program
     public static async Task Main(string[] args)
     {
         var consoleAppBuilder = new ConsoleAppBuilder(args);
+        consoleAppBuilder.ConfigureServices(services => { });
         var app = consoleAppBuilder.Build();
         var logger = app.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogInformation("Starting application...");
